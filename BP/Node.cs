@@ -14,7 +14,6 @@ public class Node : UserControl
     public Boolean canBeLinked = true;
 
     private Node connectedNode;
-    private Boolean isSelected = false;
 
     private Types returnType;
 
@@ -25,8 +24,8 @@ public class Node : UserControl
 
     public List<NodeArguments> nodeArgs = new List<NodeArguments>();
 
-    private NodeArguments currentArgSelect;
-    private Button previousSelectedButton;
+    private NodeArguments? currentArgSelect;
+    private Button? previousSelectedButton;
 
     private string pluginCode = "";
 
@@ -106,6 +105,7 @@ public class Node : UserControl
         argSelector.BackColor = Color.White;
         argSelector.Size = new Size(20, 20);
         argSelector.Click += NodeArgument_ButtonClick;
+        arg.Selector = argSelector;
         this.Controls.Add(argSelector);
 
         
@@ -198,7 +198,7 @@ public class Node : UserControl
       
         if (sender is Button clickedButton)
         {
-            MessageBox.Show(clickedButton.Name);
+            // MessageBox.Show(clickedButton.Name);
             int index = int.Parse(clickedButton.Name.Split("__")[1]);
             if (previousSelectedButton != null)
             {
@@ -257,10 +257,16 @@ public class Node : UserControl
         get { return returnType; } set { returnType = value; }
     }
 
-    public Boolean Selected
+    public Button? Selected
     {
-        get { return isSelected;  }
-        set { isSelected = value; }
+        get { return previousSelectedButton;  }
+        set { previousSelectedButton = value; }
+    }
+
+    public NodeArguments? CurrentSelectedArg
+    {
+        get { return currentArgSelect; }
+        set { currentArgSelect = value; }
     }
 
     public Boolean CanBeLink

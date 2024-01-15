@@ -1,19 +1,20 @@
 using System.Text;
+using System.Windows.Forms;
 
 namespace BP
 {
     public partial class Form1 : Form
     {
 
-        public Node firstNode;
-        public Node secondNode;
+        public Node? firstNode;
+        public Node? secondNode;
         public List<Node> nodes = new List<Node>();
         public List<NodeConnector> nodeConnectors = new List<NodeConnector>();
         public List<NodeArgumentsConnector> nodeArgsConnectors = new List<NodeArgumentsConnector>();
         public NodeArgumentsConnector connectorArg;
 
-        public NodeArguments inputNodeArg;
-        public NodeArguments outputNodeArg;
+        public NodeArguments? inputNodeArg;
+        public NodeArguments? outputNodeArg;
         public Form1()
         {
             InitializeComponent();
@@ -38,7 +39,7 @@ namespace BP
                         }
                     }
                     nodeConnectors.Add(new NodeConnector(firstNode, secondNode, bpp));
-                    DrawAllConnectors();
+                    bpp.Invalidate();
                     firstNode = null;
                     secondNode = null;
                 }
@@ -56,22 +57,33 @@ namespace BP
                 }
                 else
                 {
-                    if (e.NodeArgument.ArgumentTypes == ArgumentTypes.Set && outputNodeArg.Type == e.NodeArgument.Type)
+                    if (e.NodeArgument.ArgumentTypes == ArgumentTypes.Set && outputNodeArg != null && outputNodeArg.Type == e.NodeArgument.Type)
                     {
                         console.Items.Add($"[{e.NodeArgument.Title}] argument was selected as setter !");
                         inputNodeArg = e.NodeArgument;
+                        e.NodeArgument.ConnectedArgument = outputNodeArg;
                         if (outputNodeArg != null && outputNodeArg != inputNodeArg)
                         {
-                            
-                            NodeArgumentsConnector argument = new NodeArgumentsConnector(outputNodeArg, inputNodeArg, bpp);
-                            nodeArgsConnectors.Add(argument);
-                            DrawAllConnectors();
+                            if (outputNodeArg.Selector != null)
+                            {
+                                outputNodeArg.Selector.BackColor = Color.White;
+                            }
+                            if (inputNodeArg.Selector != null)
+                            {
+                                inputNodeArg.Selector.BackColor = Color.White;
+                            }
+                            inputNodeArg.ParentNode.Selected = null;
+                            inputNodeArg.ParentNode.CurrentSelectedArg = null;
+                            outputNodeArg.ParentNode.Selected = null;
+                            outputNodeArg.ParentNode.CurrentSelectedArg = null;
                             outputNodeArg = null;
                             inputNodeArg = null;
+
+                            bpp.Invalidate();
                         }
                     } else
                     {
-                        console.Items.Add($"[{outputNodeArg.Title} => {e.NodeArgument.Title}] don't have same type or are not setter !");
+                        console.Items.Add($"[{outputNodeArg?.Title ?? ""} => {e.NodeArgument.Title}] don't have same type or are not setter !");
                     }
                     
                 };
@@ -80,14 +92,19 @@ namespace BP
 
         public void DrawAllConnectors()
         {
-            foreach (NodeConnector connector in nodeConnectors)
+            foreach (Node node in nodes)
             {
-                connector.Draw(bpp.CreateGraphics());
-            }
-
-            foreach (NodeArgumentsConnector connectorArg in nodeArgsConnectors)
-            {
-                connectorArg.Draw(bpp.CreateGraphics());
+                if (node.ConnecteNode != null)
+                {
+                    new NodeConnector(node, node.ConnecteNode, bpp).Draw(bpp.CreateGraphics());
+                }
+                foreach (NodeArguments nodeArg in node.nodeArgs)
+                {
+                    if (nodeArg.ConnectedArgument != null)
+                    {
+                        new NodeArgumentsConnector(nodeArg.ConnectedArgument, nodeArg, bpp).Draw(bpp.CreateGraphics());
+                    }
+                }
             }
         }
         protected override void OnPaint(PaintEventArgs e)
@@ -224,7 +241,17 @@ namespace BP
         {
             if (currentNode.ConnecteNode != null)
             {
-                classCode.AppendLine($"        {currentNode.ConnecteNode.Title}();");
+                classCode.Append($"        {currentNode.ConnecteNode.Title}(");
+                int i = 0;
+                foreach (NodeArguments nodeArg in currentNode.ConnecteNode.nodeArgs)
+                {
+                    if (nodeArg.ConnectedArgument != null) {
+                        classCode.Append($"{nodeArg.ConnectedArgument.ParentNode.Title}()");
+                        if (i != currentNode.ConnecteNode.nodeArgs.Count - 1) {  classCode.Append(", "); }
+                    }
+                    i++;
+                }
+                classCode.AppendLine(");");
                 GenerateCode(classCode, currentNode.ConnecteNode);
             }
         }

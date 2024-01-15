@@ -18,6 +18,7 @@ public class NodeArguments
     private Node parentNode;
     private Point position;
     private NodeArguments connectedArgument;
+    private Button selector;
 
     public String Title
     {
@@ -57,4 +58,9 @@ public class NodeArguments
         set { connectedArgument = value; }
     }
 
+    public Button Selector
+    {
+        get { return selector; }
+        set { selector = value; }
+    }
 }
